@@ -1,155 +1,106 @@
 #include <iostream>
-#include <algorithm>
-#include <vector>
+#include <deque>
+#include <string>
 #include <unordered_map>
-#include <bitset>//check
- 
 using namespace std;
- 
-int task;
-char chess;
-int alpha_initial=0;
-int beta_initial=2;
-long long one=1;
-long long root=0;
-int chess_num=0;
-unordered_map<long long, int> m[3][3];
- 
-int WINLOSE(long long &a){
-	int line_X=0;
-	int line_O=0;
-	for (int i=0;i<49;i=i+10){//check row
-		int num_X=0;
-		int num_O=0;
-		for (int j=0;j<9;j=j+2){
-			int k=i+j;
-			if ((a>>k)%4==1)//X
-				num_X+=1;
-			else if ((a>>k)%4==2)//O
-				num_O+=1;
-		}
-		if (num_X>=4)
-			line_X+=1;
-		else if (num_O>=4)
-			line_O+=1;
+int main(){
+	string s;
+	cin >> s;
+	deque<long long> v;
+	long long x=29;
+	char a='a';
+	long long M=1000000007;
+	v.push_back(0ll);
+	for (int i=0;i<s.size();i++){
+		long long tmp=s[i]-a+1;
+		v.push_back(tmp%M);
 	}
-	for (int j=0;j<9;j=j+2){//check column
-		int num_X=0;
-		int num_O=0;
-		for (int i=0;i<49;i=i+10){
-			int k=i+j;
-			if ((a>>k)%4==1)//X
-				num_X+=1;
-			else if ((a>>k)%4==2)//O
-				num_O+=1;
+	int q,type;
+	cin >> q;
+	unordered_map<long long,int> m[10];
+	for (int i=0;i<q;i++){
+		cin >> type;
+		if (type==1){
+			char c;
+			cin >> c;
+			long long tmp=c-a+1;
+			tmp=tmp%M;
+			v.pop_front();
+			v.push_front(tmp);
+			v.push_front(0ll);
+			long long y=v[0];
+			for (int i=1;i<11;i++){
+				y=(y*x+v[i])%M;
+				auto it=m[i-1].find(y);
+				if (it!=m[i-1].end())
+					(it->second)++;
+			}
 		}
-		if (num_X>=4)
-			line_X+=1;
-		else if (num_O>=4)
-			line_O+=1;
-	}
-	int k;
-	for (int i=0;i<2;i++){//check diagonal
-		int num_X=0;
-		int num_O=0;
-		for (int j=0;j<5;j++){
-			if (i==0)
-				k=12*j;
-			else if (i==1)
-				k=8*(j+1);
-			if ((a>>k)%4==1)//X
-				num_X+=1;
-			else if ((a>>k)%4==2)//O
-				num_O+=1;
-		}
-		if (num_X>=4)
-			line_X+=1;
-		else if (num_O>=4)
-			line_O+=1;
-	}
-	int winlose=1;//tie
-	if (line_X>line_O)
-		winlose=0;//X wins
-	else if (line_X<line_O)
-		winlose=2;//O wins
-	return winlose;
-}
-int PRUNE(long long &node,int alpha,int beta) {
-	//auto it = m[][].find();
-	int ori_alpha = alpha;
-	int ori_beta = beta;
-	auto it=m[alpha][beta].find(node);
-	if (it!=m[alpha][beta].end())
-		return it->second;
-	else{
-		vector<int> empty;//check empty position to calculate depth, player, children
-		for (int i=0;i<49;i=i+2){
-			if ((node>>i)%4==0)
-				empty.push_back(i);
-		}
-		if (empty.size()==3){//depth=0
-			long long node_tmp=node;
-			for (int i=0;i<empty.size();i++)
-				node_tmp+=(one<<empty[i]);//X
-			int tmp=WINLOSE(node_tmp);
-			m[ori_alpha][ori_beta][node]=tmp;
-			return tmp;
+		else if (type==2){
+			char c;
+			cin >> c;
+			long long tmp=c-a+1;
+			v.push_back(tmp%M);
+			long long y=v[0];
+			for (int i=1;i<11;i++){
+				long long z=v[v.size()-i];
+				for (int j=1;j<i;j++)
+					z=(z*x)%M;
+				y=(y+z)%M;
+				auto it=m[i-1].find(y);
+				if (it!=m[i-1].end())
+					(it->second)++;
+			}
 		}
 		else{
-			for (int i=0;i<empty.size()-1;i++){//children
-				for (int j=i+1;j<empty.size();j++){
-					long long node_tmp=node;
-					if (empty.size()%4==1){//player=O
-						node_tmp=node+(one<<(empty[i]+1));
-						node_tmp+=(one<<(empty[j]+1));;
-						int tmp=PRUNE(node_tmp,alpha,beta);//prevent calling PRUNE twice
-						if (tmp>alpha)
-							alpha=tmp;
-					}
-					else if (empty.size()%4==3){//player=X
-						node_tmp=node+(one<<empty[i]);
-						node_tmp+=(one<<empty[j]);
-						int tmp=PRUNE(node_tmp,alpha,beta);
-						if (tmp<beta)
-							beta=tmp;
-					}
-					if (beta<=alpha){
-						i=empty.size();
-						j=empty.size();
-					}
+			string ss;
+			cin >> ss;
+			int len=ss.size();
+			deque<long long> vv;
+			vv.push_back(0ll);
+			for (int i=0;i<len;i++){
+				long long tmp=ss[i]-a+1;
+				vv.push_back((vv[i]*x+tmp)%M);
+			}
+			int flag=0;
+			if (len<=10){
+				auto it=m[len-1].find(vv[len]);
+				if (it!=m[len-1].end()){
+					cout << it->second << endl;
+					flag=1;
 				}
 			}
-			if (empty.size()%4==1){//player=O
-				m[ori_alpha][ori_beta][node]=alpha;
-				return alpha;
+			if (flag==0){
+				deque<long long> vvv;
+				vvv.push_back(0ll);
+				for (int i=1;i<v.size();i++){
+					vvv.push_back((vvv[i-1]*x+v[i])%M);
+				}
+	
+				/*
+				for (int i=0;i<v.size();i++){
+					cout << v[i] << ' ';
+				}
+				cout << endl;
+				*/
+				int end=v.size()-len;
+				int count=0;
+				//cout << vv[len] << endl;
+				long long y=1;
+				for (int j=0;j<len;j++)
+					y=(y*x)%M;
+				for (int i=1;i<end+1;i++){
+					long long tmp;
+					tmp=vvv[i-1];
+					tmp=(tmp*y)%M;
+					long long hash=(vvv[i+len-1]-tmp+M)%M;
+					if (hash==vv[len])
+						count++;
+				}
+				if (len<=10)
+					m[len-1][vv[len]]=count;
+				cout << count << endl;
 			}
-			else if (empty.size()%4==3){//player=X
-				m[ori_alpha][ori_beta][node]=beta;
-				return beta;
-			}
-		}
-	}
-}
-int main(int argc,char* argv[]){
-	cin >> task;
-	while(chess_num<=25*task){
-		cin >> chess;
-		if (chess=='O')
-			root+=(1<<1);
-		else if (chess=='X')
-			root+=1;
-		chess_num+=1;
-		if (chess_num%25!=0)
-			root=root<<2;
-		else if (chess_num%25==0){//root done
-			int result=PRUNE(root,alpha_initial,beta_initial);//alpha beta pruning
-			if (result==2)
-				cout << "O win" << endl;
-			else if (result==1)
-				cout << "Draw" << endl;
-			else
-				cout << "X win" << endl;
-			root=0;
 		}
 	}
 	return 0;
